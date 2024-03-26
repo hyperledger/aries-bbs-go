@@ -11,9 +11,8 @@ import (
 	"encoding/base64"
 	"testing"
 
+	"github.com/hyperledger/aries-bbs-go/bbs"
 	"github.com/stretchr/testify/require"
-
-	"github.com/hyperledger/aries-framework-go/component/kmscrypto/crypto/primitive/bbs12381g2pub"
 )
 
 //nolint:lll
@@ -28,7 +27,7 @@ func TestBlsG2Pub_Verify(t *testing.T) {
 
 	messagesBytes := [][]byte{[]byte("message1"), []byte("message2")}
 
-	bls := bbs12381g2pub.New()
+	bls := bbs.New()
 
 	t.Run("valid signature", func(t *testing.T) {
 		err = bls.Verify(messagesBytes, sigBytes, pkBytes)
@@ -79,7 +78,7 @@ func TestBBSG2Pub_SignWithKeyPair(t *testing.T) {
 	pubKey, privKey, err := generateKeyPairRandom()
 	require.NoError(t, err)
 
-	bls := bbs12381g2pub.New()
+	bls := bbs.New()
 
 	messagesBytes := [][]byte{[]byte("message1"), []byte("message2")}
 
@@ -98,7 +97,7 @@ func TestBBSG2Pub_Sign(t *testing.T) {
 	pubKey, privKey, err := generateKeyPairRandom()
 	require.NoError(t, err)
 
-	bls := bbs12381g2pub.New()
+	bls := bbs.New()
 
 	messagesBytes := [][]byte{[]byte("message1"), []byte("message2")}
 
@@ -143,7 +142,7 @@ func TestBBSG2Pub_VerifyProof(t *testing.T) {
 	messagesBytes := [][]byte{[]byte("message1"), []byte("message2")}
 	revealedMessagesBytes := messagesBytes[:1]
 
-	bls := bbs12381g2pub.New()
+	bls := bbs.New()
 
 	t.Run("valid signature proof", func(t *testing.T) {
 		err = bls.VerifyProof(revealedMessagesBytes, proofBytes, nonce, pkBytes)
@@ -212,7 +211,7 @@ func TestBBSG2Pub_VerifyProof_SeveralDisclosedMessages(t *testing.T) {
 	}
 	revealedMessagesBytes := [][]byte{messagesBytes[0], messagesBytes[2]}
 
-	bls := bbs12381g2pub.New()
+	bls := bbs.New()
 
 	t.Run("valid signature", func(t *testing.T) {
 		err = bls.VerifyProof(revealedMessagesBytes, proofBytes, nonce, pkBytes)
@@ -233,7 +232,7 @@ func TestBBSG2Pub_DeriveProof(t *testing.T) {
 		[]byte("message3"),
 		[]byte("message4"),
 	}
-	bls := bbs12381g2pub.New()
+	bls := bbs.New()
 
 	signatureBytes, err := bls.Sign(messagesBytes, privKeyBytes)
 	require.NoError(t, err)

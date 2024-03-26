@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/IBM/mathlib v0.0.3-0.20230605104224-932ab92f2ce0
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
-	github.com/hyperledger/aries-framework-go/component/kmscrypto v0.0.0-20230901120639-e17eddd3ad3e
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.21.0
 )

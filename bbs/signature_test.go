@@ -9,9 +9,8 @@ package bbs_test
 import (
 	"testing"
 
+	"github.com/hyperledger/aries-bbs-go/bbs"
 	"github.com/stretchr/testify/require"
-
-	bbs "github.com/hyperledger/aries-framework-go/component/kmscrypto/crypto/primitive/bbs12381g2pub"
 )
 
 func TestParseSignature(t *testing.T) {
