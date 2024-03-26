@@ -13,31 +13,31 @@ import (
 )
 
 func Test_pokPayload(t *testing.T) {
-	payload := newPoKPayload(4, []int{0, 2})
-	require.Equal(t, 3, payload.lenInBytes())
+	payload := NewPoKPayload(4, []int{0, 2})
+	require.Equal(t, 3, payload.LenInBytes())
 
-	bytes, err := payload.toBytes()
+	bytes, err := payload.ToBytes()
 	require.NoError(t, err)
 	require.Len(t, bytes, 3)
 
-	payloadParsed, err := parsePoKPayload(bytes)
+	payloadParsed, err := ParsePoKPayload(bytes)
 	require.NoError(t, err)
 	require.Equal(t, payload, payloadParsed)
 
-	payloadParsed, err = parsePoKPayload([]byte{})
+	payloadParsed, err = ParsePoKPayload([]byte{})
 	require.Error(t, err)
 	require.Nil(t, payloadParsed)
 }
 
 func Test_pokPayloadFail(t *testing.T) {
-	payload := newPoKPayload(1, []int{0, 2, 4, 5, 9})
-	require.Equal(t, 3, payload.lenInBytes())
+	payload := NewPoKPayload(1, []int{0, 2, 4, 5, 9})
+	require.Equal(t, 3, payload.LenInBytes())
 
-	_, err := payload.toBytes()
+	_, err := payload.ToBytes()
 	require.EqualError(t, err, "invalid size of PoK payload")
 
 	bytes := []byte{9, 0}
-	payloadParsed, err := parsePoKPayload(bytes)
+	payloadParsed, err := ParsePoKPayload(bytes)
 	require.EqualError(t, err, "invalid size of PoK payload")
 	require.Nil(t, payloadParsed)
 }

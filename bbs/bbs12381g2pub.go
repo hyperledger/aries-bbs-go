@@ -96,12 +96,12 @@ func (bbs *BBSG2Pub) Sign(messages [][]byte, privKeyBytes []byte) ([]byte, error
 
 // VerifyProof verifies BBS+ signature proof for one ore more revealed messages.
 func (bbs *BBSG2Pub) VerifyProof(messagesBytes [][]byte, proof, nonce, pubKeyBytes []byte) error {
-	payload, err := parsePoKPayload(proof)
+	payload, err := ParsePoKPayload(proof)
 	if err != nil {
 		return fmt.Errorf("parse signature proof: %w", err)
 	}
 
-	signatureProof, err := ParseSignatureProof(proof[payload.lenInBytes():])
+	signatureProof, err := ParseSignatureProof(proof[payload.LenInBytes():])
 	if err != nil {
 		return fmt.Errorf("parse signature proof: %w", err)
 	}
@@ -118,20 +118,20 @@ func (bbs *BBSG2Pub) VerifyProof(messagesBytes [][]byte, proof, nonce, pubKeyByt
 		return fmt.Errorf("build generators from public key: %w", err)
 	}
 
-	if len(payload.revealed) > len(messages) {
+	if len(payload.Revealed) > len(messages) {
 		return fmt.Errorf("payload revealed bigger from messages")
 	}
 
 	revealedMessages := make(map[int]*SignatureMessage)
-	for i := range payload.revealed {
-		revealedMessages[payload.revealed[i]] = messages[i]
+	for i := range payload.Revealed {
+		revealedMessages[payload.Revealed[i]] = messages[i]
 	}
 
 	challengeBytes := signatureProof.GetBytesForChallenge(revealedMessages, publicKeyWithGenerators)
 	proofNonce := ParseProofNonce(nonce)
 	proofNonceBytes := proofNonce.ToBytes()
 	challengeBytes = append(challengeBytes, proofNonceBytes...)
-	proofChallenge := frFromOKM(challengeBytes)
+	proofChallenge := FrFromOKM(challengeBytes)
 
 	return signatureProof.Verify(proofChallenge, publicKeyWithGenerators, revealedMessages, messages)
 }
@@ -175,13 +175,13 @@ func (bbs *BBSG2Pub) DeriveProof(messages [][]byte, sigBytes, nonce, pubKeyBytes
 	proofNonceBytes := proofNonce.ToBytes()
 	challengeBytes = append(challengeBytes, proofNonceBytes...)
 
-	proofChallenge := frFromOKM(challengeBytes)
+	proofChallenge := FrFromOKM(challengeBytes)
 
 	proof := pokSignature.GenerateProof(proofChallenge)
 
-	payload := newPoKPayload(messagesCount, revealedIndexes)
+	payload := NewPoKPayload(messagesCount, revealedIndexes)
 
-	payloadBytes, err := payload.toBytes()
+	payloadBytes, err := payload.ToBytes()
 	if err != nil {
 		return nil, fmt.Errorf("derive proof: paylod to bytes: %w", err)
 	}
@@ -229,16 +229,16 @@ func (bbs *BBSG2Pub) SignWithKey(messages [][]byte, privKey *PrivateKey) ([]byte
 func computeB(s *ml.Zr, messages []*SignatureMessage, key *PublicKeyWithGenerators) *ml.G1 {
 	const basesOffset = 2
 
-	cb := newCommitmentBuilder(len(messages) + basesOffset)
+	cb := NewCommitmentBuilder(len(messages) + basesOffset)
 
-	cb.add(curve.GenG1, curve.NewZrFromInt(1))
-	cb.add(key.h0, s)
+	cb.Add(curve.GenG1, curve.NewZrFromInt(1))
+	cb.Add(key.H0, s)
 
 	for i := 0; i < len(messages); i++ {
-		cb.add(key.h[i], messages[i].FR)
+		cb.Add(key.H[i], messages[i].FR)
 	}
 
-	return cb.build()
+	return cb.Build()
 }
 
 type commitmentBuilder struct {
@@ -246,19 +246,19 @@ type commitmentBuilder struct {
 	scalars []*ml.Zr
 }
 
-func newCommitmentBuilder(expectedSize int) *commitmentBuilder {
+func NewCommitmentBuilder(expectedSize int) *commitmentBuilder {
 	return &commitmentBuilder{
 		bases:   make([]*ml.G1, 0, expectedSize),
 		scalars: make([]*ml.Zr, 0, expectedSize),
 	}
 }
 
-func (cb *commitmentBuilder) add(base *ml.G1, scalar *ml.Zr) {
+func (cb *commitmentBuilder) Add(base *ml.G1, scalar *ml.Zr) {
 	cb.bases = append(cb.bases, base)
 	cb.scalars = append(cb.scalars, scalar)
 }
 
-func (cb *commitmentBuilder) build() *ml.G1 {
+func (cb *commitmentBuilder) Build() *ml.G1 {
 	return sumOfG1Products(cb.bases, cb.scalars)
 }
 
@@ -296,7 +296,7 @@ type ProofNonce struct {
 // ParseProofNonce creates a new ProofNonce from bytes.
 func ParseProofNonce(proofNonceBytes []byte) *ProofNonce {
 	return &ProofNonce{
-		frFromOKM(proofNonceBytes),
+		FrFromOKM(proofNonceBytes),
 	}
 }
 

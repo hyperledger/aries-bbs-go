@@ -38,8 +38,8 @@ type PrivateKey struct {
 // PublicKeyWithGenerators extends PublicKey with a blinding generator h0, a commitment to the secret key w,
 // and a generator for each message h.
 type PublicKeyWithGenerators struct {
-	h0 *ml.G1
-	h  []*ml.G1
+	H0 *ml.G1
+	H  []*ml.G1
 
 	w *ml.G2
 
@@ -70,8 +70,8 @@ func (pk *PublicKey) ToPublicKeyWithGenerators(messagesCount int) (*PublicKeyWit
 	}
 
 	return &PublicKeyWithGenerators{
-		h0:            h0,
-		h:             h,
+		H0:            h0,
+		H:             h,
 		w:             pk.PointG2,
 		messagesCount: messagesCount,
 	}, nil
@@ -155,7 +155,7 @@ func GenerateKeyPair(h func() hash.Hash, seed []byte) (*PublicKey, *PrivateKey, 
 		return nil, nil, err
 	}
 
-	privKeyFr := frFromOKM(okm)
+	privKeyFr := FrFromOKM(okm)
 
 	privKey := &PrivateKey{privKeyFr}
 	pubKey := privKey.PublicKey()
