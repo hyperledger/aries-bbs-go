@@ -12,9 +12,8 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/hyperledger/aries-bbs-go/bbs"
 	"github.com/stretchr/testify/require"
-
-	bbs "github.com/hyperledger/aries-framework-go/component/kmscrypto/crypto/primitive/bbs12381g2pub"
 )
 
 func TestGenerateKeyPair(t *testing.T) {
