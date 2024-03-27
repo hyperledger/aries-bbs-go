@@ -22,7 +22,7 @@ type PoKOfSignatureProof struct {
 	d      *ml.G1
 
 	proofVC1 *ProofG1
-	proofVC2 *ProofG1
+	ProofVC2 *ProofG1
 }
 
 // GetBytesForChallenge creates bytes for proof challenge.
@@ -35,18 +35,18 @@ func (sp *PoKOfSignatureProof) GetBytesForChallenge(revealedMessages map[int]*Si
 
 	bytes = append(bytes, sp.aBar.Bytes()...)
 	bytes = append(bytes, sp.aPrime.Bytes()...)
-	bytes = append(bytes, pubKey.h0.Bytes()...)
-	bytes = append(bytes, sp.proofVC1.commitment.Bytes()...)
+	bytes = append(bytes, pubKey.H0.Bytes()...)
+	bytes = append(bytes, sp.proofVC1.Commitment.Bytes()...)
 	bytes = append(bytes, sp.d.Bytes()...)
-	bytes = append(bytes, pubKey.h0.Bytes()...)
+	bytes = append(bytes, pubKey.H0.Bytes()...)
 
-	for i := range pubKey.h {
+	for i := range pubKey.H {
 		if _, ok := revealedMessages[i]; !ok {
-			bytes = append(bytes, pubKey.h[i].Bytes()...)
+			bytes = append(bytes, pubKey.H[i].Bytes()...)
 		}
 	}
 
-	bytes = append(bytes, sp.proofVC2.commitment.Bytes()...)
+	bytes = append(bytes, sp.ProofVC2.Commitment.Bytes()...)
 
 	return bytes
 }
@@ -71,7 +71,7 @@ func (sp *PoKOfSignatureProof) Verify(challenge *ml.Zr, pubKey *PublicKeyWithGen
 }
 
 func (sp *PoKOfSignatureProof) verifyVC1Proof(challenge *ml.Zr, pubKey *PublicKeyWithGenerators) error {
-	basesVC1 := []*ml.G1{sp.aPrime, pubKey.h0}
+	basesVC1 := []*ml.G1{sp.aPrime, pubKey.H0}
 	aBarD := sp.aBar.Copy()
 	aBarD.Sub(sp.d)
 
@@ -88,7 +88,7 @@ func (sp *PoKOfSignatureProof) verifyVC2Proof(challenge *ml.Zr, pubKey *PublicKe
 	revealedMessagesCount := len(revealedMessages)
 
 	basesVC2 := make([]*ml.G1, 0, 2+pubKey.messagesCount-revealedMessagesCount)
-	basesVC2 = append(basesVC2, sp.d, pubKey.h0)
+	basesVC2 = append(basesVC2, sp.d, pubKey.H0)
 
 	basesDisclosed := make([]*ml.G1, 0, 1+revealedMessagesCount)
 	exponents := make([]*ml.Zr, 0, 1+revealedMessagesCount)
@@ -98,13 +98,13 @@ func (sp *PoKOfSignatureProof) verifyVC2Proof(challenge *ml.Zr, pubKey *PublicKe
 
 	revealedMessagesInd := 0
 
-	for i := range pubKey.h {
+	for i := range pubKey.H {
 		if _, ok := revealedMessages[i]; ok {
-			basesDisclosed = append(basesDisclosed, pubKey.h[i])
+			basesDisclosed = append(basesDisclosed, pubKey.H[i])
 			exponents = append(exponents, messages[revealedMessagesInd].FR)
 			revealedMessagesInd++
 		} else {
-			basesVC2 = append(basesVC2, pubKey.h[i])
+			basesVC2 = append(basesVC2, pubKey.H[i])
 		}
 	}
 
@@ -122,7 +122,7 @@ func (sp *PoKOfSignatureProof) verifyVC2Proof(challenge *ml.Zr, pubKey *PublicKe
 
 	pr.Neg()
 
-	err := sp.proofVC2.Verify(basesVC2, pr, challenge)
+	err := sp.ProofVC2.Verify(basesVC2, pr, challenge)
 	if err != nil {
 		return errors.New("bad signature")
 	}
@@ -144,29 +144,29 @@ func (sp *PoKOfSignatureProof) ToBytes() []byte {
 	bytes = append(bytes, lenBytes...)
 	bytes = append(bytes, proof1Bytes...)
 
-	bytes = append(bytes, sp.proofVC2.ToBytes()...)
+	bytes = append(bytes, sp.ProofVC2.ToBytes()...)
 
 	return bytes
 }
 
 // ProofG1 is a proof of knowledge of a signature and hidden messages.
 type ProofG1 struct {
-	commitment *ml.G1
-	responses  []*ml.Zr
+	Commitment *ml.G1
+	Responses  []*ml.Zr
 }
 
 // NewProofG1 creates a new ProofG1.
 func NewProofG1(commitment *ml.G1, responses []*ml.Zr) *ProofG1 {
 	return &ProofG1{
-		commitment: commitment,
-		responses:  responses,
+		Commitment: commitment,
+		Responses:  responses,
 	}
 }
 
 // Verify verifies the ProofG1.
 func (pg1 *ProofG1) Verify(bases []*ml.G1, commitment *ml.G1, challenge *ml.Zr) error {
 	contribution := pg1.getChallengeContribution(bases, commitment, challenge)
-	contribution.Sub(pg1.commitment)
+	contribution.Sub(pg1.Commitment)
 
 	if !contribution.IsInfinity() {
 		return errors.New("contribution is not zero")
@@ -178,7 +178,7 @@ func (pg1 *ProofG1) Verify(bases []*ml.G1, commitment *ml.G1, challenge *ml.Zr) 
 func (pg1 *ProofG1) getChallengeContribution(bases []*ml.G1, commitment *ml.G1,
 	challenge *ml.Zr) *ml.G1 {
 	points := append(bases, commitment)
-	scalars := append(pg1.responses, challenge)
+	scalars := append(pg1.Responses, challenge)
 
 	return sumOfG1Products(points, scalars)
 }
@@ -187,15 +187,15 @@ func (pg1 *ProofG1) getChallengeContribution(bases []*ml.G1, commitment *ml.G1,
 func (pg1 *ProofG1) ToBytes() []byte {
 	bytes := make([]byte, 0)
 
-	commitmentBytes := pg1.commitment.Compressed()
+	commitmentBytes := pg1.Commitment.Compressed()
 	bytes = append(bytes, commitmentBytes...)
 
 	lenBytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(lenBytes, uint32(len(pg1.responses)))
+	binary.BigEndian.PutUint32(lenBytes, uint32(len(pg1.Responses)))
 	bytes = append(bytes, lenBytes...)
 
-	for i := range pg1.responses {
-		responseBytes := frToRepr(pg1.responses[i]).Bytes()
+	for i := range pg1.Responses {
+		responseBytes := frToRepr(pg1.Responses[i]).Bytes()
 		bytes = append(bytes, responseBytes...)
 	}
 
@@ -241,7 +241,7 @@ func ParseSignatureProof(sigProofBytes []byte) (*PoKOfSignatureProof, error) {
 		aBar:     g1Points[1],
 		d:        g1Points[2],
 		proofVC1: proofVc1,
-		proofVC2: proofVc2,
+		ProofVC2: proofVc2,
 	}, nil
 }
 
